@@ -1,6 +1,6 @@
 // Ball class module
 export class Ball {
-  constructor(x, y, radius, color) {
+  constructor(x, y, radius, color, particleSystem = null, audioSystem = null) {
     this.x = x;
     this.y = y;
     this.radius = radius;
@@ -10,15 +10,50 @@ export class Ball {
     this.dy = this.speed;
     this.maxSpeed = 8;
     this.initialSpeed = 4;
+    this.particleSystem = particleSystem;
+    this.audioSystem = audioSystem;
+    this.lastX = x;
+    this.lastY = y;
+  }
+
+  setParticleSystem(particleSystem) {
+    this.particleSystem = particleSystem;
+  }
+
+  setAudioSystem(audioSystem) {
+    this.audioSystem = audioSystem;
   }
 
   update(gameWidth, gameHeight) {
+    this.lastX = this.x;
+    this.lastY = this.y;
+
     this.x += this.dx;
     this.y += this.dy;
 
     // Ball collision with top and bottom walls
     if (this.y - this.radius <= 0 || this.y + this.radius >= gameHeight) {
       this.dy = -this.dy;
+
+      // Add wall hit particles
+      if (this.particleSystem) {
+        this.particleSystem.addExplosion(this.x, this.y, 8, {
+          colors: ['#4ecdc4', '#45b7d1', '#96ceb4']
+        });
+      }
+
+      // Play wall bounce sound
+      if (this.audioSystem) {
+        this.audioSystem.playWallBounce();
+      }
+    }
+
+    // Add ball trail
+    if (this.particleSystem) {
+      this.particleSystem.addTrail(this.lastX, this.lastY, this.dx, this.dy, {
+        color: '#ff77c6',
+        count: 2
+      });
     }
 
     return {
@@ -56,6 +91,13 @@ export class Ball {
       } else {
         // Ball moving left, hit right paddle
         this.x = paddleBounds.left - this.radius;
+      }
+
+      // Add paddle hit particles
+      if (this.particleSystem) {
+        this.particleSystem.addExplosion(this.x, this.y, 12, {
+          colors: ['#4ecdc4', '#ffffff', '#7877c6']
+        });
       }
 
       return true; // Collision occurred

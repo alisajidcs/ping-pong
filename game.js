@@ -6,6 +6,9 @@ import { InputManager } from './js/InputManager.js';
 import { GameManager } from './js/GameManager.js';
 import { Renderer } from './js/Renderer.js';
 import { GameModeManager } from './js/GameModeManager.js';
+import { ParticleSystem } from './js/ParticleSystem.js';
+import { AudioSystem } from './js/AudioSystem.js';
+import { GameJuice } from './js/GameJuice.js';
 
 // DOM elements
 const canvas = document.getElementById('gameCanvas');
@@ -24,7 +27,10 @@ const singlePlayerBtn = document.getElementById('singlePlayerBtn');
 const multiPlayerBtn = document.getElementById('multiPlayerBtn');
 
 // Initialize game modules
-const renderer = new Renderer(canvas);
+const particleSystem = new ParticleSystem();
+const audioSystem = new AudioSystem();
+const gameJuice = new GameJuice(canvas);
+const renderer = new Renderer(canvas, particleSystem, gameJuice);
 const inputManager = new InputManager();
 const gameManager = new GameManager(canvas, updateScore);
 const aiController = new AIController('medium');
@@ -33,7 +39,7 @@ const gameModeManager = new GameModeManager();
 // Create game objects
 const leftPaddle = new Paddle(20, canvas.height / 2 - 40, 15, 80, '#ffffff');
 const rightPaddle = new Paddle(canvas.width - 35, canvas.height / 2 - 40, 15, 80, '#ffffff');
-const ball = new Ball(canvas.width / 2, canvas.height / 2, 8, '#ffffff');
+const ball = new Ball(canvas.width / 2, canvas.height / 2, 8, '#ffffff', particleSystem, audioSystem);
 
 // Game loop
 function gameLoop() {
@@ -54,18 +60,38 @@ function gameLoop() {
   leftPaddle.update(canvas.height);
   rightPaddle.update(canvas.height);
 
+  // Update effects
+  particleSystem.update();
+  gameJuice.update();
+
   // Update ball and check for scoring
   const ballState = ball.update(canvas.width, canvas.height);
 
   // Check paddle collisions
-  ball.checkPaddleCollision(leftPaddle);
-  ball.checkPaddleCollision(rightPaddle);
-
-  // Handle scoring
+  if (ball.checkPaddleCollision(leftPaddle) || ball.checkPaddleCollision(rightPaddle)) {
+    audioSystem.playPaddleHit();
+    gameJuice.addScreenShake(3, 150);
+  }  // Handle scoring
   if (ballState.scoredLeft) {
+    // Add score celebration particles
+    particleSystem.addExplosion(canvas.width - 50, canvas.height / 2, 20, {
+      colors: ['#ff6b6b', '#ffeaa7', '#fd79a8']
+    });
+    gameJuice.addScoreAnimation(canvas.width - 100, canvas.height / 2, 1, '#ff6b6b');
+    gameJuice.addScreenShake(8, 300);
+    gameJuice.createFlashEffect('rgba(255, 107, 107, 0.2)', 150);
+    audioSystem.playScore(false); // AI/Right player scores
     gameManager.scorePoint(false); // Right player/AI scores
     ball.reset(canvas.width, canvas.height);
   } else if (ballState.scoredRight) {
+    // Add score celebration particles
+    particleSystem.addExplosion(50, canvas.height / 2, 20, {
+      colors: ['#4ecdc4', '#00ff88', '#45b7d1']
+    });
+    gameJuice.addScoreAnimation(100, canvas.height / 2, 1, '#4ecdc4');
+    gameJuice.addScreenShake(8, 300);
+    gameJuice.createFlashEffect('rgba(78, 205, 196, 0.2)', 150);
+    audioSystem.playScore(true); // Left player scores
     gameManager.scorePoint(true); // Left player scores
     ball.reset(canvas.width, canvas.height);
   }
@@ -111,6 +137,8 @@ function showGame() {
 
 // Game control functions
 function startGame() {
+  audioSystem.resume(); // Resume audio context
+  audioSystem.playGameStart();
   gameManager.start();
   startBtn.textContent = 'Running...';
   startBtn.disabled = true;
@@ -153,12 +181,16 @@ function returnToMenu() {
 
 // Mode selection handlers
 function selectSinglePlayer() {
+  audioSystem.playMenuSelect();
+  gameJuice.createPulseEffect(singlePlayerBtn);
   gameModeManager.startSinglePlayer();
   showGame();
   resetGame();
 }
 
 function selectMultiPlayer() {
+  audioSystem.playMenuSelect();
+  gameJuice.createPulseEffect(multiPlayerBtn);
   gameModeManager.startMultiplayer();
   showGame();
   resetGame();
