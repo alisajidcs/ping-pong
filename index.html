@@ -10,23 +10,41 @@
 
 <body>
   <div class="game-container">
-    <h1>Ping Pong Game</h1>
-    <div class="score-board">
-      <div class="score">
-        <span class="player-label">Player: </span>
-        <span id="playerScore">0</span>
+    <h1>PING PONG</h1>
+
+    <!-- Classic Menu Screen -->
+    <div id="menuScreen" class="menu-screen">
+      <div class="menu-title">SELECT GAME MODE</div>
+      <div class="menu-options">
+        <button id="singlePlayerBtn" class="menu-btn">1 PLAYER</button>
+        <button id="multiPlayerBtn" class="menu-btn">2 PLAYER</button>
       </div>
-      <div class="score">
-        <span class="ai-label">AI: </span>
-        <span id="aiScore">0</span>
+      <div class="menu-instructions">
+        <p>1 PLAYER: Play against computer</p>
+        <p>2 PLAYER: Player 1 (W/S) vs Player 2 (↑/↓)</p>
       </div>
     </div>
-    <canvas id="gameCanvas" width="800" height="400"></canvas>
-    <div class="controls">
-      <p>Use Arrow Keys or W/S to move your paddle</p>
-      <button id="startBtn">Start Game</button>
-      <button id="pauseBtn">Pause</button>
-      <button id="resetBtn">Reset</button>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="game-screen hidden">
+      <div class="score-board">
+        <div class="score">
+          <span id="leftPlayerLabel" class="player-label">Player: </span>
+          <span id="leftPlayerScore">0</span>
+        </div>
+        <div class="score">
+          <span id="rightPlayerLabel" class="ai-label">AI: </span>
+          <span id="rightPlayerScore">0</span>
+        </div>
+      </div>
+      <canvas id="gameCanvas" width="800" height="400"></canvas>
+      <div class="controls">
+        <p id="controlInstructions">Use Arrow Keys or W/S to move your paddle</p>
+        <button id="startBtn">Start Game</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+        <button id="menuBtn">Back to Menu</button>
+      </div>
     </div>
   </div>
   <script type="module" src="game.js"></script>
